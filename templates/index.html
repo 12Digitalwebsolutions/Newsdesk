@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NewsDesk</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="sidebar">
+    <h2>Select a State & City</h2>
+    <select id="stateSelect">
+      <option value="">-- Select State --</option>
+      {% for state in states %}
+        <option value="{{ state }}">{{ state }}</option>
+      {% endfor %}
+    </select>
+
+    <select id="citySelect">
+      <option value="">-- Select City --</option>
+    </select>
+  </div>
+
+  <div class="main-content">
+    <h2>Trending News</h2>
+    <ul id="newsList"></ul>
+  </div>
+</div>
+
+<script>
+document.getElementById('stateSelect').addEventListener('change', function () {
+    const state = this.value;
+    fetch('/get_cities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'state=' + encodeURIComponent(state)
+    })
+    .then(res => res.json())
+    .then(cities => {
+        const citySelect = document.getElementById('citySelect');
+        citySelect.innerHTML = '<option value="">-- Select City --</option>';
+        cities.forEach(city => {
+            const opt = document.createElement('option');
+            opt.value = city;
+            opt.textContent = city;
+            citySelect.appendChild(opt);
+        });
+    });
+});
+
+document.getElementById('citySelect').addEventListener('change', function () {
+    const city = this.value;
+    const state = document.getElementById('stateSelect').value;
+    fetch('/get_news', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `state=${encodeURIComponent(state)}&city=${encodeURIComponent(city)}`
+    })
+    .then(res => res.json())
+    .then(articles => {
+        const newsList = document.getElementById('newsList');
+        newsList.innerHTML = '';
+        articles.forEach(article => {
+            const li = document.createElement('li');
+            li.innerHTML = `<a href="${article.url}" target="_blank">${article.title}</a>`;
+            newsList.appendChild(li);
+        });
+    });
+});
+</script>
+</body>
+</html>
